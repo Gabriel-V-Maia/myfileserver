@@ -83,14 +83,14 @@ class fileServer:
             items = args[1:] 
             
             if not items:
-                conn.sendall(b"ERRO: Nenhum item especificado")
+                conn.sendall(b"nenhum item especificado")
                 return
             
             for item in items:
                 path = self.STORAGE_DIR / item
                 
                 if not path.exists():
-                    conn.sendall(f"ERRO: {item} não encontrado".encode())
+                    conn.sendall(f"{item} não encontrado".encode())
                     return
                 
                 if path.is_file():
