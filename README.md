@@ -3,7 +3,6 @@ Repositório para um sistema que criei para um servidor dedicado a armazenamento
 Ele não é feito pra servidores de produção ou algo do tipo, ele é mais uma ferramenta pessoal mesmo.
 
 # Setup
-Para avisar, eu APENAS testei isso no UBUNTU SERVER, nenhuma outra distro foi testada.
 Você precisa baixar o pyinstaller se ainda não tiver ele
 
 ```bash
