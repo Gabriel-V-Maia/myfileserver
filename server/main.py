@@ -29,11 +29,12 @@ class fileServer:
             data = conn.recv(1024)
             cmd = data.decode().strip()
 
-            match cmd:
+            match cmd.split()[0]:
                 case 'push':
-                    pass
+                    self._push(conn, cmd)
                 case 'pull':
-                    pass
+                    self._pull(conn, cmd)
+
                 
         except Exception as e:
             print(f"{e}")
@@ -100,7 +101,7 @@ class fileServer:
                     for file in path.rglob("*"):  
                         if file.is_file():
                             relative_path = file.relative_to(self.STORAGE_DIR)
-                        self._send_file(conn, file, str(relative_path))
+                            self._send_file(conn, file, str(relative_path))
         
         except Exception as e:
             conn.sendall(f"ERRO: {e}".encode())
