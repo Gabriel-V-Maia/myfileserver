@@ -55,7 +55,7 @@ class fileServer:
                     return
                 
                 filepath = self.STORAGE_DIR / file
-                conn.sendall(b"READY")  
+                conn.sendall(b"OK")  
                 
                 filesize_str = conn.recv(1024).decode().strip()
                 filesize = int(filesize_str)
