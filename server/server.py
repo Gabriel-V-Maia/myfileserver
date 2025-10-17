@@ -6,7 +6,7 @@ class fileServer:
     def __init__(self, HOST="127.0.0.1", PORT=6000,STORAGE_DIR="./storage"):
         fileServer.HOST = HOST 
         fileServer.PORT = PORT
-        self.STORAGE_DIR = Path(STORAGE_DIR)
+        self.STORAGE_DIR = Path(__file__).parent / "storage"
         self.STORAGE_DIR.mkdir(exist_ok=True)
     
     def start(self):
@@ -121,8 +121,4 @@ class fileServer:
     
         print(f"arquivo enviado: {filename}")
         
-        
-        
-if __name__ == "__main__":
-    fileserver = fileServer()
-    fileserver.start()
+
