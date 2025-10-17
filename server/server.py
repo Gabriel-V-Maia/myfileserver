@@ -3,9 +3,9 @@ import os
 from pathlib import Path
 
 class fileServer:
-    def __init__(self, HOST="127.0.0.1", PORT=6000,STORAGE_DIR="./storage"):
-        fileServer.HOST = HOST 
-        fileServer.PORT = PORT
+    def __init__(self, HOST="127.0.0.1", PORT=6000):
+        self.HOST = HOST 
+        self.PORT = PORT
         self.STORAGE_DIR = Path(__file__).parent / "storage"
         self.STORAGE_DIR.mkdir(exist_ok=True)
     
@@ -23,32 +23,29 @@ class fileServer:
                     print(f"[*] cliente conectado: {addr}")
                     self.handle(conn, addr)
 
-
     def handle(self, conn: socket, addr: tuple):
         try: 
             data = conn.recv(1024)
             cmd = data.decode().strip()
+            cmd_type = cmd.split()[0]
 
-            match cmd.split()[0]:
+            match cmd_type:
                 case 'push':
                     self._push(conn, cmd)
                 case 'pull':
                     self._pull(conn, cmd)
-
                 
         except Exception as e:
-            print(f"{e}")
+            print(f"[!] erro: {e}")
 
     def _push(self, conn: socket, cmd):
-        """Recebe arquivos do client"""
-
         try:
             args = cmd.split(' ')
             files = args[1:]
 
             if not files:
                 conn.sendall(b"nenhum arquivo especificado")
-                return -1
+                return
             
             for file in files:
                 if ".." in file or "/" in file or "\\" in file:
@@ -72,11 +69,12 @@ class fileServer:
                         f.write(chunk)
                         received += len(chunk)
                 
-                print(f"arquivo armazenado: {file}")
+                print(f"[+] arquivo armazenado: {file}")
             
             conn.sendall(b"OK")
         except Exception as e:
-            print(f"{e}")
+            print(f"[!] erro em _push: {e}")
+            conn.sendall(f"ERRO: {e}".encode())
 
     def _pull(self, conn, cmd):
         try:
@@ -104,13 +102,13 @@ class fileServer:
                             self._send_file(conn, file, str(relative_path))
         
         except Exception as e:
+            print(f"[!] erro em _pull: {e}")
             conn.sendall(f"ERRO: {e}".encode())
 
     def _send_file(self, conn, filepath, filename):
-        """Helper pra enviar um arquivo"""
         filesize = filepath.stat().st_size
         conn.sendall(str(filesize).encode())
-        conn.recv(1024)  # confirmação
+        conn.recv(1024)
         
         with open(filepath, "rb") as f:
             while True:
@@ -119,6 +117,9 @@ class fileServer:
                     break
                 conn.sendall(chunk)
     
-        print(f"arquivo enviado: {filename}")
-        
+        print(f"[+] arquivo enviado: {filename}")
 
+        
+if __name__ == "__main__":
+    fileserver = fileServer()
+    fileserver.start()
