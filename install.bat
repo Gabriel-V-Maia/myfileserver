@@ -1,35 +1,33 @@
 @echo off
-setlocal enabledelayedexpansion
+setlocal
 
-net session >nul 2>&1
-if %errorLevel% neq 0 (
-    echo Este script requer privilégios de administrador
-    pause
-    exit /b 1
+set ROOT=%~dp0
+set CLIENT=%ROOT%client
+set DIST=%CLIENT%\dist
+set USER_BIN=%USERPROFILE%\myfileserver\bin
+
+if not exist "%USER_BIN%" mkdir "%USER_BIN%"
+
+python -m pip install --user pyinstaller
+
+cd "%CLIENT%"
+python -m PyInstaller --onefile pull.py
+python -m PyInstaller --onefile push.py
+python -m PyInstaller --onefile send.py
+cd "%ROOT%"
+
+if not exist "%DIST%\pull.exe" (
+    exit /b
 )
 
-cd /d "%~dp0"
+copy /Y "%DIST%\pull.exe" "%USER_BIN%\pull.exe"
+copy /Y "%DIST%\push.exe" "%USER_BIN%\push.exe"
+copy /Y "%DIST%\send.exe" "%USER_BIN%\send.exe"
 
-echo [+] Compilando server...
-python -m PyInstaller --onefile server/server.py
-if errorlevel 1 (
-    echo [!] Erro ao compilar server
-    pause
-    exit /b 1
-)
+setx PATH "%PATH%;%USER_BIN%"
 
-echo [+] Compilando client...
-python -m PyInstaller --onefile client/client.py
-if errorlevel 1 (
-    echo [!] Erro ao compilar client
-    pause
-    exit /b 1
-)
+powershell -Command "$env:PATH += ';%USER_BIN%'"
 
-echo [+] Copiando executaveis para C:\Windows\System32\...
-copy dist\server.exe C:\Windows\System32\
-copy dist\client.exe C:\Windows\System32\
+echo Tudo pronto!
 
-echo [+] Instalacao completa!
-echo Use 'server' e 'client' em qualquer lugar
 pause
