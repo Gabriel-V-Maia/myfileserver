@@ -3,10 +3,10 @@ import os
 from pathlib import Path
 
 class fileServer:
-    def __init__(self, HOST="127.0.0.1", PORT=6000):
+    def __init__(self, HOST="0.0.0.0", PORT=6000, STORAGEDIR="/fileserver/"):
         self.HOST = HOST 
         self.PORT = PORT
-        self.STORAGE_DIR = Path(__file__).parent / "storage"
+        self.STORAGE_DIR = Path(STORAGEDIR)
         self.STORAGE_DIR.mkdir(exist_ok=True)
     
     def start(self):
