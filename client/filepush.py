@@ -1,5 +1,5 @@
 import sys
-from fileclient import FileClient
+from filesend import FileClient
 from dotenv import load_dotenv
 from pathlib import Path
 import os
@@ -19,3 +19,4 @@ if len(sys.argv) < 2:
 files = sys.argv[1:]
 client = FileClient(host=server_ip, port=6000)
 client.push(*files)
+
