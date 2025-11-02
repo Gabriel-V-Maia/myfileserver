@@ -23,8 +23,8 @@ Write-Host "criando estrutura de diretórios..."
 if (-not (Test-Path $ConfigRoot)) { New-Item -ItemType Directory -Path $ConfigRoot -Force | Out-Null }
 if (-not (Test-Path $BinPath)) { New-Item -ItemType Directory -Path $BinPath -Force | Out-Null }
 
-Write-Host "tentando instalar pyinstaller"
-python -m pip install --user pyinstaller
+Write-Host "tentando instalar dependências..."
+python -m pip install --user pyinstaller python-dotenv
 
 Write-Host "Compilando cliente..."
 Push-Location $Client
@@ -47,10 +47,12 @@ Copy-Item (Join-Path $ServerDist 'server.exe') $BinPath -Force
 if (-not (Test-Path $EnvFile)) {
     Write-Host "`nConfiguração do servidor:"
     $serverIp = Read-Host "Digite o IP do servidor (ex: 192.168.1.100)"
-    "server_ip=$serverIp" | Out-File -FilePath $EnvFile -Encoding UTF8
+    
+    [System.IO.File]::WriteAllText($EnvFile, "server_ip=$serverIp`n", [System.Text.UTF8Encoding]::new($false))
     Write-Host "Arquivo .env criado em: $EnvFile" -ForegroundColor Green
 } else {
     Write-Host "Arquivo .env já existe em: $EnvFile" -ForegroundColor Yellow
+    Write-Host "Para reconfigurar, delete o arquivo e execute novamente." -ForegroundColor Yellow
 }
 
 function Test-Admin {
@@ -74,10 +76,10 @@ Write-Host "`n=====================================" -ForegroundColor Cyan
 Write-Host "Instalação concluída com sucesso!" -ForegroundColor Green
 Write-Host "=====================================" -ForegroundColor Cyan
 Write-Host "`nComandos disponíveis:"
-Write-Host "  - pull.exe <arquivo>" -ForegroundColor Yellow
-Write-Host "  - push.exe <arquivo1> <arquivo2> ..." -ForegroundColor Yellow
-Write-Host "  - send.exe <arquivo> <destinatario>" -ForegroundColor Yellow
-Write-Host "  - server.exe" -ForegroundColor Yellow
+Write-Host "  - pull <arquivo>" -ForegroundColor Yellow
+Write-Host "  - push <arquivo1> <arquivo2> ..." -ForegroundColor Yellow
+Write-Host "  - send <arquivo> <destinatario>" -ForegroundColor Yellow
+Write-Host "  - server" -ForegroundColor Yellow
 Write-Host "`nConfiguração em: $ConfigRoot" -ForegroundColor Cyan
 Write-Host "`nOBS: Reinicie o terminal para usar os comandos!" -ForegroundColor Magenta
 
