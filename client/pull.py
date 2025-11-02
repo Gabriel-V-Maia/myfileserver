@@ -3,7 +3,7 @@ from send import FileClient
 from dotenv import load_dotenv
 import os 
 
-load_dotenv()
+load_dotenv(Path.home() / 'myfileserverconfig' / '.env')
 
 server_ip = os.getenv("server_ip")
 
