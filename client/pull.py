@@ -1,15 +1,16 @@
 import sys
 from send import FileClient
 from dotenv import load_dotenv
-import os 
+import os
 from pathlib import Path
 
-load_dotenv(Path.home() / 'myfileserverconfigs' / '.env')
+env_path = Path.home() / 'myfileserverconfigs' / '.env'
+load_dotenv(dotenv_path=env_path)
 
 server_ip = os.getenv("server_ip")
 
 if not server_ip:
-    print("server_ip não configurado, abortando")
+    print(f"server_ip não configurado no {env_path}, abortando")
     sys.exit(1)
 
 if len(sys.argv) < 2:
@@ -19,5 +20,3 @@ if len(sys.argv) < 2:
 files = sys.argv[1:]
 client = FileClient(host=server_ip, port=6000)
 client.pull(*files)
-
-
