@@ -27,4 +27,6 @@ pull <arquivo1 arquivo2>
 pull teste.zip teste.txt
 ```
 
-
+```python
+server
+```
