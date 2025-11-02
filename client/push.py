@@ -2,6 +2,7 @@ import sys
 from send import FileClient
 from dotenv import load_dotenv
 import os 
+from pathlib import Path
 
 load_dotenv(Path.home() / 'myfileserverconfig' / '.env')
 
@@ -18,3 +19,4 @@ if len(sys.argv) < 2:
 files = sys.argv[1:]
 client = FileClient(host=server_ip, port=6000)
 client.push(*files)
+
