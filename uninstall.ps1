@@ -9,8 +9,12 @@ function Ensure-Admin {
 
 Ensure-Admin
 
-$InstallRoot = Join-Path $env:ProgramFiles 'myfileserver'
-$BinPath     = Join-Path $InstallRoot 'bin'
+$ConfigRoot = Join-Path $env:USERPROFILE 'myfileserverconfigs'
+$BinPath = Join-Path $ConfigRoot 'bins'
+
+Write-Host "=====================================" -ForegroundColor Cyan
+Write-Host "Desinstalando myfileserver..." -ForegroundColor Yellow
+Write-Host "=====================================" -ForegroundColor Cyan
 
 function Test-Admin {
     ([Security.Principal.WindowsPrincipal] `
@@ -19,19 +23,25 @@ function Test-Admin {
 }
 
 $scope = if (Test-Admin) { 'Machine' } else { 'User' }
+$currentPath = [Environment]::GetEnvironmentVariable('Path', $scope).Split(';') | ForEach-Object { $_.Trim() }
 
-if (Test-Path $BinPath) {
-    Remove-Item -Path $BinPath -Recurse -Force
+if ($currentPath -contains $BinPath) {
+    Write-Host "Removendo do PATH..."
+    $newPath = ($currentPath | Where-Object { $_ -ne $BinPath }) -join ';'
+    [Environment]::SetEnvironmentVariable('Path', $newPath, $scope)
+    Write-Host "PATH atualizado!" -ForegroundColor Green
 }
 
-if (Test-Path $InstallRoot) {
-    Remove-Item -Path $InstallRoot -Recurse -Force
+if (Test-Path $ConfigRoot) {
+    Write-Host "Removendo diretório de configuração..."
+    Remove-Item -Path $ConfigRoot -Recurse -Force
+    Write-Host "Diretório removido: $ConfigRoot" -ForegroundColor Green
+} else {
+    Write-Host "Diretório de configuração não encontrado." -ForegroundColor Yellow
 }
 
-$currentPath = [Environment]::GetEnvironmentVariable('Path', $scope)
-$newPath = ($currentPath.Split(';') | Where-Object { $_ -ne $BinPath }) -join ';'
+Write-Host "`n=====================================" -ForegroundColor Cyan
+Write-Host "Desinstalação concluída!" -ForegroundColor Green
+Write-Host "=====================================" -ForegroundColor Cyan
 
-[Environment]::SetEnvironmentVariable('Path', $newPath, $scope)
-
-Write-Host "`nDesinstalação completa!"
-Read-Host "Pressione Enter para sair"
+Read-Host "`nPressione Enter para sair"
