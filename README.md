@@ -30,3 +30,9 @@ pull teste.zip teste.txt
 ```python
 server
 ```
+
+# Licença
+
+MIT
+
+
