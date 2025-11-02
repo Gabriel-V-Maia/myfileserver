@@ -1,14 +1,13 @@
 import sys
-from send import FileClient
+from fileclient import FileClient
 from dotenv import load_dotenv
-import os
 from pathlib import Path
+import os
 
 env_path = Path.home() / 'myfileserverconfigs' / '.env'
 load_dotenv(dotenv_path=env_path)
 
 server_ip = os.getenv("server_ip")
-
 if not server_ip:
     print(f"server_ip não configurado no {env_path}, abortando")
     sys.exit(1)
