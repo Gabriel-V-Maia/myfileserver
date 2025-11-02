@@ -19,9 +19,9 @@ python3 -m pip install --break-system-packages --user pyinstaller 2>/dev/null ||
 
 echo "Compilando cliente..."
 cd "$CLIENT"
-python3 -m PyInstaller --onefile pull.py
-python3 -m PyInstaller --onefile push.py
-python3 -m PyInstaller --onefile send.py
+python3 -m PyInstaller --onefile filepull.py --name pull
+python3 -m PyInstaller --onefile filepush.py --name push
+python3 -m PyInstaller --onefile filesend.py --name send
 
 echo "Compilando servidor..."
 cd "$SERVER"
@@ -46,7 +46,7 @@ echo ""
 if [ -f "$ENV_FILE" ]; then
     echo "Arquivo .env já existe."
     read -p "Deseja reconfigurar o IP do servidor? (s/N): " reconfig
-    if [ "$reconfig" = "s" ] || [ "$reconfig" = "S" ]; then
+    if [[ "$reconfig" == "s" || "$reconfig" == "S" ]]; then
         read -p "Digite o IP do servidor (ex: 192.168.1.100): " server_ip
         echo "server_ip=$server_ip" > "$ENV_FILE"
         echo "Arquivo .env atualizado!"
