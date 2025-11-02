@@ -25,7 +25,7 @@ def ensure_admin():
 
 
 class fileServer:
-    def __init__(self, HOST="0.0.0.0", PORT=6000, STORAGEDIR="/fileserver/"):
+    def __init__(self, HOST="0.0.0.0", PORT=6000, STORAGEDIR=str( Path.home() / "fileserver" )):
         self.HOST = HOST 
         self.PORT = PORT
         self.STORAGE_DIR = Path(STORAGEDIR)
@@ -145,3 +145,4 @@ class fileServer:
 if __name__ == "__main__":
     fileserver = fileServer()
     fileserver.start()
+
