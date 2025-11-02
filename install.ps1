@@ -12,7 +12,8 @@ Ensure-Admin
 $Root        = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $Client      = Join-Path $Root 'client'
 $Server      = Join-path $Root 'server'
-$Dist        = Join-Path $Client 'dist'
+$ClientDist  = Join-Path $Client 'dist'
+$ServerDist  = Join-Path $Server 'dist'
 $InstallRoot = Join-Path $env:ProgramFiles 'myfileserver'
 $BinPath     = Join-Path $InstallRoot 'bin'
 
@@ -32,16 +33,15 @@ Push-Location $Server
 python -m PyInstaller --onefile server.py
 Pop-Location
 
-if (-not (Test-Path (Join-Path $Dist 'pull.exe'))) {
+if (-not (Test-Path (Join-Path $ClientDist 'pull.exe'))) {
     Write-Host "Erro: não foi possível encontrar pull.exe"
     exit 1
 }
 
-Copy-Item (Join-Path $Dist 'pull.exe') $BinPath -Force
-Copy-Item (Join-Path $Dist 'push.exe') $BinPath -Force
-Copy-Item (Join-Path $Dist 'send.exe') $BinPath -Force
-
-Copy-Item (Join-Path $Dist 'server.exe') $BinPath -Force
+Copy-Item (Join-Path $ClientDist 'pull.exe') $BinPath -Force
+Copy-Item (Join-Path $ClientDist 'push.exe') $BinPath -Force
+Copy-Item (Join-Path $ClientDist 'send.exe') $BinPath -Force
+Copy-Item (Join-Path $ServerDist 'server.exe') $BinPath -Force
 
 function Test-Admin {
     ([Security.Principal.WindowsPrincipal] `
