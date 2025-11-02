@@ -20,33 +20,23 @@ $BinPath = Join-Path $ConfigRoot 'bins'
 $EnvFile = Join-Path $ConfigRoot '.env'
 
 Write-Host "criando estrutura de diretórios..."
-if (-not (Test-Path $ConfigRoot)) {
-    New-Item -ItemType Directory -Path $ConfigRoot -Force | Out-Null
-}
-if (-not (Test-Path $BinPath)) {
-    New-Item -ItemType Directory -Path $BinPath -Force | Out-Null
-}
+if (-not (Test-Path $ConfigRoot)) { New-Item -ItemType Directory -Path $ConfigRoot -Force | Out-Null }
+if (-not (Test-Path $BinPath)) { New-Item -ItemType Directory -Path $BinPath -Force | Out-Null }
 
 Write-Host "tentando instalar pyinstaller"
 python -m pip install --user pyinstaller
 
 Write-Host "Compilando cliente..."
 Push-Location $Client
-python -m PyInstaller --onefile pull.py
-python -m PyInstaller --onefile push.py
-python -m PyInstaller --onefile send.py
+python -m PyInstaller --onefile filepull.py --name pull
+python -m PyInstaller --onefile filepush.py --name push
+python -m PyInstaller --onefile filesend.py --name send
 Pop-Location
 
 Write-Host "Compilando servidor..."
 Push-Location $Server
 python -m PyInstaller --onefile server.py
 Pop-Location
-
-if (-not (Test-Path (Join-Path $ClientDist 'pull.exe'))) {
-    Write-Host "Erro: não foi possível encontrar pull.exe" -ForegroundColor Red
-    Read-Host "Pressione Enter para sair"
-    exit 1
-}
 
 Write-Host "Copiando executáveis..."
 Copy-Item (Join-Path $ClientDist 'pull.exe') $BinPath -Force
