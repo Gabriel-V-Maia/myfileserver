@@ -6,29 +6,89 @@ CLIENT="$ROOT/client"
 SERVER="$ROOT/server"
 DIST_CLIENT="$CLIENT/dist"
 DIST_SERVER="$SERVER/dist"
-USER_BIN="$HOME/.local/bin"
 
-mkdir -p "$USER_BIN"
+CONFIG_ROOT="$HOME/myfileserverconfigs"
+BIN_PATH="$CONFIG_ROOT/bins"
+ENV_FILE="$CONFIG_ROOT/.env"
 
-python3 -m pip install --break-system-packages --user pyinstaller
+echo "Criando estrutura de diretórios..."
+mkdir -p "$BIN_PATH"
 
+echo "Instalando PyInstaller..."
+python3 -m pip install --break-system-packages --user pyinstaller 2>/dev/null || python3 -m pip install --user pyinstaller
+
+echo "Compilando cliente..."
 cd "$CLIENT"
 python3 -m PyInstaller --onefile pull.py
 python3 -m PyInstaller --onefile push.py
 python3 -m PyInstaller --onefile send.py
-cd "$ROOT"
 
+echo "Compilando servidor..."
 cd "$SERVER"
 python3 -m PyInstaller --onefile server.py
+
 cd "$ROOT"
 
-cp "$DIST_CLIENT/pull" "$USER_BIN/pull"
-cp "$DIST_CLIENT/push" "$USER_BIN/push"
-cp "$DIST_CLIENT/send" "$USER_BIN/send"
-cp "$DIST_SERVER/server" "$USER_BIN/server"
+if [ ! -f "$DIST_CLIENT/pull" ]; then
+    echo "Erro: não foi possível encontrar o executável pull"
+    exit 1
+fi
 
-chmod +x "$USER_BIN/pull" "$USER_BIN/push" "$USER_BIN/send" "$USER_BIN/server"
+echo "Copiando executáveis..."
+cp "$DIST_CLIENT/pull" "$BIN_PATH/pull"
+cp "$DIST_CLIENT/push" "$BIN_PATH/push"
+cp "$DIST_CLIENT/send" "$BIN_PATH/send"
+cp "$DIST_SERVER/server" "$BIN_PATH/server"
 
-export PATH="$PATH:$USER_BIN"
-echo "Instalação concluída. Agora você pode usar: pull, push, send, server"
+chmod +x "$BIN_PATH/pull" "$BIN_PATH/push" "$BIN_PATH/send" "$BIN_PATH/server"
 
+echo ""
+if [ -f "$ENV_FILE" ]; then
+    echo "Arquivo .env já existe."
+    read -p "Deseja reconfigurar o IP do servidor? (s/N): " reconfig
+    if [ "$reconfig" = "s" ] || [ "$reconfig" = "S" ]; then
+        read -p "Digite o IP do servidor (ex: 192.168.1.100): " server_ip
+        echo "server_ip=$server_ip" > "$ENV_FILE"
+        echo "Arquivo .env atualizado!"
+    else
+        echo "Mantendo configuração existente."
+    fi
+else
+    echo "Configuração do servidor:"
+    read -p "Digite o IP do servidor (ex: 192.168.1.100): " server_ip
+    echo "server_ip=$server_ip" > "$ENV_FILE"
+    echo "Arquivo .env criado em: $ENV_FILE"
+fi
+
+SHELL_RC=""
+if [ -f "$HOME/.bashrc" ]; then
+    SHELL_RC="$HOME/.bashrc"
+elif [ -f "$HOME/.zshrc" ]; then
+    SHELL_RC="$HOME/.zshrc"
+fi
+
+if [ -n "$SHELL_RC" ]; then
+    if ! grep -q "$BIN_PATH" "$SHELL_RC"; then
+        echo "" >> "$SHELL_RC"
+        echo "# myfileserver" >> "$SHELL_RC"
+        echo "export PATH=\"\$PATH:$BIN_PATH\"" >> "$SHELL_RC"
+        echo "PATH atualizado em $SHELL_RC"
+    fi
+fi
+
+export PATH="$PATH:$BIN_PATH"
+
+echo ""
+echo "====================================="
+echo "Instalação concluída com sucesso!"
+echo "====================================="
+echo ""
+echo "Comandos disponíveis:"
+echo "  - pull <arquivo>"
+echo "  - push <arquivo1> <arquivo2> ..."
+echo "  - send <arquivo> <destinatario>"
+echo "  - server"
+echo ""
+echo "Configuração em: $CONFIG_ROOT"
+echo ""
+echo "OBS: Execute 'source $SHELL_RC' ou reinicie o terminal para usar os comandos!"
