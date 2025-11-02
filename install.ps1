@@ -50,16 +50,13 @@ function Test-Admin {
 }
 
 $scope = if (Test-Admin) { 'Machine' } else { 'User' }
-$currentPath = [Environment]::GetEnvironmentVariable('Path', $scope)
+$currentPath = [Environment]::GetEnvironmentVariable('Path', $scope).Split(';') | ForEach-Object { $_.Trim() }
 
-if (-not ($currentPath.Split(';') -contains $BinPath)) {
-    [Environment]::SetEnvironmentVariable('Path', ($currentPath + ';' + $BinPath).TrimEnd(';'), $scope)
-}
-
-if (-not ($env:Path.Split(';') -contains $BinPath)) {
-    $env:Path += ';' + $BinPath
+if (-not ($currentPath -contains $BinPath)) {
+    $newPath = ($currentPath + $BinPath) -join ';'
+    setx Path "$newPath" | Out-Null
+    $env:Path += ";$BinPath"
 }
 
 Write-Host "`nTudo pronto!"
 Read-Host "Pressione Enter para sair"
-
