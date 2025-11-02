@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import os 
 from pathlib import Path
 
-load_dotenv(Path.home() / 'myfileserverconfig' / '.env')
+load_dotenv(Path.home() / 'myfileserverconfigs' / '.env')
 
 server_ip = os.getenv("server_ip")
 
@@ -19,4 +19,5 @@ if len(sys.argv) < 2:
 files = sys.argv[1:]
 client = FileClient(host=server_ip, port=6000)
 client.pull(*files)
+
 
