@@ -10,7 +10,7 @@ USER_BIN="$HOME/.local/bin"
 
 mkdir -p "$USER_BIN"
 
-python3 -m pip install --user pyinstaller
+python3 -m pip install --break-system-packages --user pyinstaller
 
 cd "$CLIENT"
 python3 -m PyInstaller --onefile pull.py
