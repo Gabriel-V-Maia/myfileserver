@@ -17,15 +17,31 @@ mkdir -p "$BIN_PATH"
 echo "Instalando PyInstaller..."
 python3 -m pip install --break-system-packages --user pyinstaller 2>/dev/null || python3 -m pip install --user pyinstaller
 
+echo "PyInstaller Instalado!"
+sleep 3
+clear
+
+echo "Iniciando compliamentos fodásticos"
+
 echo "Compilando cliente..."
 cd "$CLIENT"
 python3 -m PyInstaller --onefile filepull.py --name pull
 python3 -m PyInstaller --onefile filepush.py --name push
 python3 -m PyInstaller --onefile filesend.py --name send
 
+echo "Client compilado"
+sleep 5
+clear
+
 echo "Compilando servidor..."
 cd "$SERVER"
 python3 -m PyInstaller --onefile server.py
+
+echo "Servidor compilado!"
+sleep 3
+clear
+
+echo "Verificando bins..."
 
 cd "$ROOT"
 
@@ -33,6 +49,7 @@ if [ ! -f "$DIST_CLIENT/pull" ]; then
     echo "Erro: não foi possível encontrar o executável pull"
     exit 1
 fi
+
 
 echo "Copiando executáveis..."
 cp "$DIST_CLIENT/pull" "$BIN_PATH/pull"
@@ -77,6 +94,13 @@ if [ -n "$SHELL_RC" ]; then
 fi
 
 export PATH="$PATH:$BIN_PATH"
+
+echo ""
+echo ""
+echo "Path Setado!"
+sleep 3
+clear
+
 
 echo ""
 echo "====================================="
