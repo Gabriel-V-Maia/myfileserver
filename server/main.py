@@ -4,6 +4,8 @@ import os
 from utils import Logger
 from inputs import InputManagement
 
+logger = Logger("Main.py")
+
 def ensure_admin():
     if os.name == "nt":   
         try:
@@ -15,7 +17,7 @@ def ensure_admin():
             sys.exit()
     else:  
         if os.geteuid() != 0:
-            print("[!] este script precisa ser rodado como root")
+            logger.warn("[!] é recomendado que este script seja rodado como root")
 
 if __name__ == "__main__":
     ensure_admin()  
