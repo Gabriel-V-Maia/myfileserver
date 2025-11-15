@@ -16,8 +16,7 @@ def ensure_admin():
     else:  
         if os.geteuid() != 0:
             print("[!] este script precisa ser rodado como root")
-            break
-       
+
 if __name__ == "__main__":
     ensure_admin()  
     inputss = InputManagement("Input Manager")
