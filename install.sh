@@ -35,7 +35,7 @@ clear
 
 echo "Compilando servidor..."
 cd "$SERVER"
-python3 -m PyInstaller --onefile server.py
+python3 -m PyInstaller --onefile main.py --name server
 
 echo "Servidor compilado!"
 sleep 3
