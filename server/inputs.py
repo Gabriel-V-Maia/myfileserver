@@ -1,6 +1,7 @@
 from utils import Logger
 from server import FileServer
 
+import threading
 
 """
     def __init__(self, HOST="0.0.0.0", PORT=6000, STORAGEDIR=str(Path.home() / "fileserver")):
@@ -14,13 +15,35 @@ class Commands:
     def __init__(self):
         self.logger = Logger("[Commands]")
 
-    def fileserver(self, host, port, storagedir):
-        self.fs = FileServer(str(host), port, storagedir)
-        self.fs.start()
+    def fileserver(self, host=None, port=None, storagedir=None):
+        if host is None or port is None or storagedir is None:
+            self.fs = FileServer()
+        else:
+            if not port is none:
+                port = int(port)
+
+            self.fs = FileServer(
+                    host if host is not None else "0.0.0.0",
+                    port if port is not None else 6000,
+                    storagedir if storagedir is not none else str(Path.home() / "fileserver")
+                    )
+
+
+        t = threading.Thread(target=self.fs.start, daemon=True)
+        t.start()
 
     def get_devices(self):
         for key, value in self.fs.get_active_connections().items():
             print(conns[key], " - ", conns[value])
+    
+    def get(self, args):
+        if not args:
+            print("get command received no args")
+
+
+        part1 = args[0]
+        
+        print(f"get command received {part1}")
 
     def execute(self, cmd):
         parts = cmd.split()
