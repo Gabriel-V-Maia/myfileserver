@@ -30,6 +30,11 @@ pull teste.zip teste.txt
 ```python
 server
 ```
+# Contribuições
+Contribuições são bem-vindas! todavia vale lembrar que este repositório é voltado principalmente para meu uso pessoal e não para aplicações reais em produção, como seria em um ambiente empresarial.
+
+Se quiser modificar ou adicionar algo, crie uma branch como "arrumar-botoes" e siga o padrão de commits descrito em: https://www.conventionalcommits.org/en/v1.0.0/
+
 
 # Licença
 
