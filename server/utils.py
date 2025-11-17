@@ -9,15 +9,15 @@ class Logger:
 
     def warn(self, text):
         if self.display:
-             print(f"{Back.YELLOW} [{self.name}] [WARNING] {text}") 
+             print(f"{Back.YELLOW} [{self.name}] [!] {text}") 
         else:
-             print(f"{Back.YELLOW} [WARNING] {text}")
+             print(f"{Back.YELLOW} [!] {text}")
         
     def info(self, text):
          if self.display:
-             print(f"{Back.BLUE} [{self.name}] [i] {text}") 
+             print(f"{Back.BLUE} [{self.name}] {text}") 
          else:
-             print(f"{Back.BLUE} [i] {text}")
+             print(f"{Back.BLUE} {text}")
          
     def error(self, text):
          if self.display:

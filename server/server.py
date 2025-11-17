@@ -7,7 +7,8 @@ from utils import Logger
 logger = Logger("[Server]")
 
 from operations import ServerOperations  
-from inputs import InputManagement
+
+
 
 class FileServer(ServerOperations):  
     def __init__(self, HOST="0.0.0.0", PORT=6000, STORAGEDIR=str(Path.home() / "fileserver")):
@@ -15,7 +16,12 @@ class FileServer(ServerOperations):
         self.PORT = PORT
         self.STORAGE_DIR = Path(STORAGEDIR)
         self.STORAGE_DIR.mkdir(exist_ok=True)
-    
+        self.active_connections = {}
+
+    @property
+    def get_active_connections(self):
+        return self.active_connections
+
     def start(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -26,9 +32,11 @@ class FileServer(ServerOperations):
             
             while True:
                 conn, addr = s.accept()
+                self.handle(conn, addr)
+                self.active_connections[addr] = conn
+
                 with conn:
                     logger.warn(f"[*] cliente conectado: {addr}")
-                    self.handle(conn, addr)
     
     def handle(self, conn: socket, addr: tuple):
         try: 
