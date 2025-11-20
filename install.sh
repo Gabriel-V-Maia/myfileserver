@@ -25,9 +25,15 @@ echo "Iniciando compliamentos fodásticos"
 
 echo "Compilando cliente..."
 cd "$CLIENT"
-python3 -m PyInstaller --onefile filepull.py --name pull
-python3 -m PyInstaller --onefile filepush.py --name push
-python3 -m PyInstaller --onefile filesend.py --name send
+
+python3 -m PyInstaller --onefile filepull.py --name pull \
+    --hidden-import=dotenv --hidden-import=python-dotenv
+
+python3 -m PyInstaller --onefile filepush.py --name push \
+    --hidden-import=dotenv --hidden-import=python-dotenv
+
+python3 -m PyInstaller --onefile filesend.py --name send \
+    --hidden-import=dotenv --hidden-import=python-dotenv
 
 echo "Client compilado"
 sleep 5
