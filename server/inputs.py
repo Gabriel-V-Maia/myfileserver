@@ -1,58 +1,97 @@
 from utils import Logger
 from server import FileServer
 
+from pathlib import Path
 import threading
-
-"""
-    def __init__(self, HOST="0.0.0.0", PORT=6000, STORAGEDIR=str(Path.home() / "fileserver")):
-        self.HOST = HOST 
-        self.PORT = PORT
-        self.STORAGE_DIR = Path(STORAGEDIR)
-        self.STORAGE_DIR.mkdir(exist_ok=True)
-""" 
 
 class Commands:
     def __init__(self):
         self.logger = Logger("[Commands]")
 
+        self.map = {
+            "devices": self.get_devices,
+        }
+
+        self.fs = None
+
+    # ----------------------------------------
+    # START FILESERVER
+    # ----------------------------------------
+
     def fileserver(self, host=None, port=None, storagedir=None):
-        if host is None or port is None or storagedir is None:
+
+        if host is None and port is None and storagedir is None:
             self.fs = FileServer()
         else:
-            if not port is none:
+
+            if port is not None:
                 port = int(port)
 
             self.fs = FileServer(
-                    host if host is not None else "0.0.0.0",
-                    port if port is not None else 6000,
-                    storagedir if storagedir is not none else str(Path.home() / "fileserver")
-                    )
-
+                host or "0.0.0.0",
+                port or 6000,
+                storagedir or str(Path.home() / "fileserver")
+            )
 
         t = threading.Thread(target=self.fs.start, daemon=True)
         t.start()
+        self.logger.info("FileServer started")
 
+    # ----------------------------------------
+    # GET DEVICES
+    # ----------------------------------------
+    
     def get_devices(self):
-        for key, value in self.fs.get_active_connections().items():
-            print(conns[key], " - ", conns[value])
+        if not self.fs:
+            print("FileServer is not running.")
+            return
+
+        conns = self.fs.get_active_connections()
+
+        for a, b in conns.items():
+            print(a, "-", b)
+
+    # ----------------------------------------
+    # GET COMMAND PARSER
+    # ----------------------------------------
     
     def get(self, args):
         if not args:
             print("get command received no args")
-
+            return
 
         part1 = args[0]
-        
-        print(f"get command received {part1}")
 
+        matches = [name for name in self.map if name.startswith(part1)]
+
+        if not matches:
+            print("unknown get option")
+            return
+
+        if len(matches) > 1:
+            print(f"ambiguous get option: {matches}")
+            return
+
+        func = self.map[matches[0]]
+        func()
+
+    # ----------------------------------------
+    # MAIN EXECUTOR
+    # ----------------------------------------
+    
     def execute(self, cmd):
         parts = cmd.split()
         if not parts:
             return None
+
         name = parts[0]
         args = parts[1:]
+
         if hasattr(self, name):
-            return getattr(self, name)(*args) if args else getattr(self, name)()
+            method = getattr(self, name)
+            return method(*args)
+        
+        print(f"Unknown command: {name}")
         return None
 
 
@@ -66,11 +105,13 @@ class InputManagement:
     def start(self):
         self.running = True
         self.logger.info("Starting input management service")
+
         while self.running:
             cmd = input("> ")
             if cmd == "exit":
                 self.running = False
                 self.logger.error("Stopping input management service")
                 break
+
             self.commands.execute(cmd)
 
