@@ -18,27 +18,27 @@ echo "Instalando PyInstaller..."
 python3 -m pip install --break-system-packages --user pyinstaller 2>/dev/null || python3 -m pip install --user pyinstaller
 
 echo "PyInstaller Instalado!"
-sleep 3
+sleep 2
 clear
 
-echo "Iniciando compliamentos fodásticos"
+echo "[*] Iniciando build dos executáveis..."
 
 echo "Compilando cliente..."
 cd "$CLIENT"
+
 python3 -m PyInstaller --onefile filepull.py --name pull
-python3 -m PyInstaller --onefile filepush.py --name push
 python3 -m PyInstaller --onefile filesend.py --name send
 
-echo "Client compilado"
-sleep 5
+echo "[OK] Cliente compilado"
+sleep 2
 clear
 
 echo "Compilando servidor..."
 cd "$SERVER"
 python3 -m PyInstaller --onefile main.py --name server
 
-echo "Servidor compilado!"
-sleep 3
+echo "[OK] Servidor compilado!"
+sleep 2
 clear
 
 echo "Verificando bins..."
@@ -46,24 +46,33 @@ echo "Verificando bins..."
 cd "$ROOT"
 
 if [ ! -f "$DIST_CLIENT/pull" ]; then
-    echo "Erro: não foi possível encontrar o executável pull"
+    echo "Erro: executável 'pull' não encontrado"
     exit 1
 fi
 
+if [ ! -f "$DIST_CLIENT/send" ]; then
+    echo "Erro: executável 'send' não encontrado"
+    exit 1
+fi
+
+if [ ! -f "$DIST_SERVER/server" ]; then
+    echo "Erro: executável 'server' não encontrado"
+    exit 1
+fi
 
 echo "Copiando executáveis..."
 cp "$DIST_CLIENT/pull" "$BIN_PATH/pull"
-cp "$DIST_CLIENT/push" "$BIN_PATH/push"
 cp "$DIST_CLIENT/send" "$BIN_PATH/send"
 cp "$DIST_SERVER/server" "$BIN_PATH/server"
 
-chmod +x "$BIN_PATH/pull" "$BIN_PATH/push" "$BIN_PATH/send" "$BIN_PATH/server"
+chmod +x "$BIN_PATH/pull" "$BIN_PATH/send" "$BIN_PATH/server"
 
 echo ""
+
 if [ -f "$ENV_FILE" ]; then
     echo "Arquivo .env já existe."
     read -p "Deseja reconfigurar o IP do servidor? (s/N): " reconfig
-    if [[ "$reconfig" == "s" || "$reconfig" == "S" ]]; then
+    if [[ "$reconfig" =~ ^[sS]$ ]]; then
         read -p "Digite o IP do servidor (ex: 192.168.1.100): " server_ip
         echo "server_ip=$server_ip" > "$ENV_FILE"
         echo "Arquivo .env atualizado!"
@@ -95,12 +104,8 @@ fi
 
 export PATH="$PATH:$BIN_PATH"
 
-echo ""
-echo ""
-echo "Path Setado!"
-sleep 3
+sleep 2
 clear
-
 
 echo ""
 echo "====================================="
@@ -109,10 +114,12 @@ echo "====================================="
 echo ""
 echo "Comandos disponíveis:"
 echo "  - pull <arquivo>"
-echo "  - push <arquivo1> <arquivo2> ..."
-echo "  - send <arquivo> <destinatario>"
+echo "  - send <arquivo1> <arquivo2> ... [destinatário]"
 echo "  - server"
 echo ""
 echo "Configuração em: $CONFIG_ROOT"
 echo ""
 echo "OBS: Execute 'source $SHELL_RC' ou reinicie o terminal para usar os comandos!"
+echo ""
+
+
