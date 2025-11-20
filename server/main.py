@@ -16,7 +16,7 @@ def ensure_admin():
             print("[!] é recomendado que rode esse script como administrador")
     else:  
         if os.geteuid() != 0:
-            logger.warn("[!] é recomendado que este script seja rodado como root")
+            logger.warn("é recomendado que este script seja rodado como root")
 
 if __name__ == "__main__":
     ensure_admin()  

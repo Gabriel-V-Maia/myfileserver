@@ -1,20 +1,17 @@
 import socket
 import os
 from pathlib import Path
-import sys
-
 from utils import Logger
+from operations import ServerOperations
+
 logger = Logger("[Server]")
 
-from operations import ServerOperations  
 
-
-
-class FileServer(ServerOperations):  
-    def __init__(self, HOST="0.0.0.0", PORT=6000, STORAGEDIR=str(Path.home() / "fileserver")):
-        self.HOST = HOST 
+class FileServer(ServerOperations):
+    def __init__(self, HOST="0.0.0.0", PORT=6000, STORAGEDIR=None):
+        self.HOST = HOST
         self.PORT = PORT
-        self.STORAGE_DIR = Path(STORAGEDIR)
+        self.STORAGE_DIR = Path(STORAGEDIR or Path.home() / "fileserver")
         self.STORAGE_DIR.mkdir(exist_ok=True)
         self.active_connections = {}
 
@@ -27,35 +24,68 @@ class FileServer(ServerOperations):
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             s.bind((self.HOST, self.PORT))
             s.listen()
-            logger.info(f"[+] servidor iniciado em {self.HOST}:{self.PORT}")
-            logger.info(f"[i] diretório de storage: {self.STORAGE_DIR}")
-            
+            logger.info(f"[+] Servidor iniciado em {self.HOST}:{self.PORT}")
+            logger.info(f"[i] Diretório de storage: {self.STORAGE_DIR}")
+
             while True:
                 conn, addr = s.accept()
-                self.handle(conn, addr)
-                self.active_connections[addr] = conn
-
                 with conn:
-                    logger.warn(f"[*] cliente conectado: {addr}")
-    
-    def handle(self, conn: socket, addr: tuple):
-        try: 
-            data = conn.recv(1024)
-            cmd = data.decode().strip()
-            
-            if not cmd:
+                    self.active_connections[addr] = conn
+                    logger.warn(f"[*] Cliente conectado: {addr}")
+                    try:
+                        self.handle(conn, addr)
+                    except Exception as e:
+                        logger.error(f"[!] Erro durante handle: {e}")
+                    finally:
+                        del self.active_connections[addr]
+
+    def handle(self, conn: socket.socket, addr: tuple):
+        """
+        Recebe headers do cliente, identifica comando e chama _push ou _pull
+        """
+        try:
+            headers = self._read_headers(conn)
+            cmd_type = headers.get("CMD", "").lower()
+
+            if not cmd_type:
+                conn.sendall(b"ERRO=Comando vazio\nENDHDR\n")
                 return
-                
-            cmd_type = cmd.split()[0]
-            
+
             match cmd_type:
-                case 'push':
-                    self._push(conn, cmd)
-                case 'pull':
-                    self._pull(conn, cmd)
+                case "push":
+                    self._push(conn, headers)
+                case "pull":
+                    self._pull(conn, headers)
                 case _:
-                    conn.sendall(b"comando invalido")
-                
+                    conn.sendall(b"ERRO=Comando invalido\nENDHDR\n")
+
         except Exception as e:
-            logger.error(f"[!] erro ao processar comando: {e}")
- 
+            logger.error(f"[!] Erro ao processar comando: {e}")
+            try:
+                conn.sendall(f"ERRO={e}\nENDHDR\n".encode())
+            except:
+                pass
+
+    # ---------------- Helpers ----------------
+    def _read_headers(self, conn: socket.socket):
+        """
+        Lê todos os headers até ENDHDR e retorna um dict
+        """
+        headers = {}
+        buffer = ""
+        while True:
+            chunk = conn.recv(1024).decode()
+            if not chunk:
+                raise ConnectionError("Conexao perdida")
+            buffer += chunk
+
+            while "\n" in buffer:
+                line, buffer = buffer.split("\n", 1)
+                line = line.strip()
+                if line == "ENDHDR":
+                    return headers
+                if "=" in line:
+                    k, v = line.split("=", 1)
+                    headers[k] = v
+
+

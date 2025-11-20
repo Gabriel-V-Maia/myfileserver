@@ -1,90 +1,104 @@
-from pathlib import Path
-import os 
 import socket
+import os
+from pathlib import Path
+import hashlib
+from utils import Logger
 
-from utils import Logger 
+logger = Logger("[Operations]")
 
-logger = Logger("[File Operations]")
 
 class ServerOperations:
-    def _push(self, conn: socket, cmd):
+    # ---------------- Push ----------------
+    def _push(self, conn: socket.socket, headers: dict):
+        """
+        Recebe headers do cliente e múltiplos arquivos
+        """
         try:
-            args = cmd.split(' ')
-            files = args[1:]
+            count = int(headers.get("COUNT", "0"))
+            folder = headers.get("DIR", "Docs")
+            folder_path = self.STORAGE_DIR / folder
+            folder_path.mkdir(parents=True, exist_ok=True)
 
-            if not files:
-                conn.sendall(b"nenhum arquivo especificado")
-                return
-            
-            for file in files:
-                if ".." in file or "/" in file or "\\" in file:
-                    conn.sendall(f"nome de arquivo inválido: {file}".encode())
-                    return
-                
-                filepath = self.STORAGE_DIR / file
-                conn.sendall(b"OK")  
-                
-                filesize_str = conn.recv(1024).decode().strip()
-                filesize = int(filesize_str)
-                
-                conn.sendall(b"OK")  
+            for _ in range(count):
+                file_hdr = self._read_headers(conn)
+                name = file_hdr["NAME"]
+                size = int(file_hdr["SIZE"])
+                expected_ck = file_hdr.get("CHECK", None)
+
+                path = folder_path / name
                 received = 0
-                with open(filepath, "wb") as f:
-                    while received < filesize:
-                        chunk = conn.recv(min(4096, filesize - received))
-                        if not chunk:
-                            break
-                        f.write(chunk)
-                        received += len(chunk)
-                
-                print(f"[+] arquivo armazenado: {file}")
-            
-            conn.sendall(b"OK")
-        except Exception as e:
-            logger.error(f"[!] erro em _push: {e}")
-            conn.sendall(f"ERRO: {e}".encode())
+                data = b""
 
-    def _pull(self, conn, cmd):
+                while received < size:
+                    chunk = conn.recv(min(4096, size - received))
+                    if not chunk:
+                        break
+                    data += chunk
+                    received += len(chunk)
+
+                actual_ck = hashlib.sha256(data).hexdigest()
+                if expected_ck and actual_ck != expected_ck:
+                    logger.error(f"[!] Checksum incorreto: {name}")
+                    conn.sendall(f"STATUS=erro\nMSG=checksum incorreto\nENDHDR\n".encode())
+                    continue
+
+                with open(path, "wb") as f:
+                    f.write(data)
+                logger.info(f"[+] Arquivo armazenado: {path}")
+
+                conn.sendall(b"STATUS=ok\nENDHDR\n")
+
+        except Exception as e:
+            logger.error(f"[!] Erro em _push: {e}")
+            conn.sendall(f"STATUS=erro\nMSG={e}\nENDHDR\n".encode())
+
+    # ---------------- Pull ----------------
+    def _pull(self, conn: socket.socket, headers: dict):
+        """
+        Envia múltiplos arquivos solicitados pelo cliente
+        """
         try:
-            args = cmd.split()
-            items = args[1:] 
-            
-            if not items:
-                conn.sendall(b"nenhum item especificado")
-                return
-            
-            for item in items:
-                path = self.STORAGE_DIR / item
-                
-                if not path.exists():
-                    conn.sendall(f"{item} não encontrado".encode())
-                    return
-                
-                if path.is_file():
-                    self._send_file(conn, path, item)
-                
-                elif path.is_dir():
-                    for file in path.rglob("*"):  
-                        if file.is_file():
-                            relative_path = file.relative_to(self.STORAGE_DIR)
-                            self._send_file(conn, file, str(relative_path))
-        
-        except Exception as e:
-            logger.error(f"[!] erro em _pull: {e}")
-            conn.sendall(f"ERRO: {e}".encode())
+            count = int(headers.get("COUNT", "0"))
+            folder = headers.get("DIR", "Docs")
+            folder_path = self.STORAGE_DIR / folder
 
-    def _send_file(self, conn, filepath, filename):
-        filesize = filepath.stat().st_size
-        conn.sendall(str(filesize).encode())
-        conn.recv(1024)
-        
-        with open(filepath, "rb") as f:
-            while True:
-                chunk = f.read(4096)
-                if not chunk:
-                    break
-                conn.sendall(chunk)
-    
-        logger.info(f"[+] arquivo enviado: {filename}")
+            if not folder_path.exists():
+                conn.sendall(f"STATUS=erro\nMSG=pasta nao encontrada\nENDHDR\n".encode())
+                return
+
+            for _ in range(count):
+                file_hdr = self._read_headers(conn)
+                name = file_hdr["NAME"]
+                path = folder_path / name
+
+                if not path.exists() or not path.is_file():
+                    conn.sendall(f"STATUS=erro\nMSG=arquivo nao encontrado: {name}\nENDHDR\n".encode())
+                    continue
+
+                size = path.stat().st_size
+                cksum = hashlib.sha256(path.read_bytes()).hexdigest()
+
+                hdr = {
+                    "STATUS": "ok",
+                    "NAME": name,
+                    "SIZE": str(size),
+                    "CHECK": cksum
+                }
+                self._send_headers(conn, hdr)
+
+                # Envia arquivo
+                with open(path, "rb") as f:
+                    for chunk in iter(lambda: f.read(4096), b""):
+                        conn.sendall(chunk)
+
+        except Exception as e:
+            logger.error(f"[!] Erro em _pull: {e}")
+            conn.sendall(f"STATUS=erro\nMSG={e}\nENDHDR\n".encode())
+
+    # ---------------- Helpers ----------------
+    def _send_headers(self, conn: socket.socket, headers: dict):
+        for k, v in headers.items():
+            conn.sendall(f"{k}={v}\n".encode())
+        conn.sendall(b"ENDHDR\n")
 
 
