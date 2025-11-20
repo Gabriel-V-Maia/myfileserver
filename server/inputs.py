@@ -19,13 +19,13 @@ class Commands:
         if host is None or port is None or storagedir is None:
             self.fs = FileServer()
         else:
-            if not port is none:
+            if not port is None:
                 port = int(port)
 
             self.fs = FileServer(
                     host if host is not None else "0.0.0.0",
                     port if port is not None else 6000,
-                    storagedir if storagedir is not none else str(Path.home() / "fileserver")
+                    storagedir if storagedir is not None else str(Path.home() / "fileserver")
                     )
 
 
