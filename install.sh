@@ -26,8 +26,11 @@ echo "[*] Iniciando build dos executáveis..."
 echo "Compilando cliente..."
 cd "$CLIENT"
 
-python3 -m PyInstaller --onefile filepull.py --name pull
-python3 -m PyInstaller --onefile filesend.py --name send
+python3 -m PyInstaller --onefile filepull.py --name pull \
+    --hidden-import=dotenv --hidden-import=python-dotenv
+
+python3 -m PyInstaller --onefile filesend.py --name send \
+    --hidden-import=dotenv --hidden-import=python-dotenv
 
 echo "[OK] Cliente compilado"
 sleep 2

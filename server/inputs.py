@@ -114,4 +114,3 @@ class InputManagement:
                 break
 
             self.commands.execute(cmd)
-
